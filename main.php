@@ -1,16 +1,19 @@
 <?php
-
-require_once 'vendor/autoload.php';
+require 'vendor/autoload.php';
 
 use AmoCRM\Client\AmoCRMApiClient;
 use League\OAuth2\Client\Token\AccessToken;
 use AmoCRM\Exceptions\AmoCRMApiException;
-use AmoCRM\Filters\ContactsFilter;
 use AmoCRM\Models\ContactModel;
+use AmoCRM\Filters\ContactsFilter;
+
+use AmoCRM\Models\CustomFieldsValues\MultitextCustomFieldValuesModel;
+use AmoCRM\Models\CustomFieldsValues\ValueCollections\MultitextCustomFieldValueCollection;
+use AmoCRM\Models\CustomFieldsValues\ValueModels\MultitextCustomFieldValueModel;
 
 $clientId = '676904c5-eee1-4fb6-9369-d3574c775247';
 $clientSecret = 'LldAD4LMFhGNcHZPdPqcKbyOFJNXOITpmK3p0Gx3GB8DAPfBi3z8dWLQzk7qz23e';
-$redirectUri = 'https://b2c7-90-156-160-11.ngrok-free.app/';
+$redirectUri = 'https://d6d7-213-230-102-28.ngrok-free.app/';
 $apiClient = new AmoCRMApiClient($clientId, $clientSecret, $redirectUri);
 
 $accessTokenArray = [
@@ -21,31 +24,7 @@ $accessTokenArray = [
 ];
 $accessToken = new AccessToken($accessTokenArray);
 $apiClient->setAccessToken($accessToken);
-
 $apiClient->setAccountBaseDomain($accessTokenArray['baseDomain']);
-
-$phone_arr = [];
-//
-//$accessToken = new AccessToken($accessTokenArray);
-//$apiClient->setAccessToken($accessToken);
-//
-//$contact = new ContactModel();
-//$contact->setId(25270057); // The ID of the contact you want to update
-//$contact->setName('migel Jordan');
-//$contact->setFirstName('Michael');
-//$contact->setLastName('jordan');
-//
-//// Update the contact
-//try {
-//    $updatedContact = $apiClient->contacts()->updateOne($contact);
-//    echo "Contact updated successfully. ID: " . $updatedContact->getId();
-//} catch (AmoCRMApiException $e) {
-//    echo "Error updating contact: " . $e->getMessage();
-//}
-//
-//
-
-
 try {
     $contactsService = $apiClient->contacts();
     $contactsFilter = new ContactsFilter();
@@ -53,66 +32,54 @@ try {
 
     foreach ($contactsCollection as $contact) {
         /** @var ContactModel $contact */
-        echo 'Contact Name: ' . $contact->getName() . PHP_EOL;
+        echo 'Contact Name: ' . $contact->getName() . "<br>";
+        echo "ID: " . $contact->getId() . "<br>";
+        $contactId = $contact->getId();
+        $contact = $apiClient->contacts()->getOne($contactId);
 
         $customFields = $contact->getCustomFieldsValues();
         $phoneField = $customFields->getBy('fieldCode', 'PHONE');
+
         if ($phoneField) {
             $phones = $phoneField->getValues();
 
-            echo '<h1> Phone array : </h1>' . $phones . '<br>';
-            foreach ($phones as $phone) {
-                $phone_arr[] = $phone->getValue();
+            foreach ($phones as $phoneValue) {
+                $phoneNumber = $phoneValue->getValue();
+                $correctedPhoneNumber = correctPhoneNumber($phoneNumber);
+
+                if ($correctedPhoneNumber !== $phoneNumber) {
+                    $phoneValue->setValue($correctedPhoneNumber);
+                    $contact->setCustomFieldsValues($customFields);
+
+                    try {
+                        $apiClient->contacts()->updateOne($contact);
+                        echo "Contact ID {$contactId} updated successfully with phone number {$correctedPhoneNumber}.<br>";
+                    } catch (AmoCRMApiException $e) {
+                        echo "Error updating contact ID {$contactId}: " . $e->getMessage() . "<br>";
+                    }
+                }
             }
+        } else {
+            echo "No phone field found for contact ID {$contactId}.<br>";
         }
-
     }
-    echo '<h1> Phone number array : </h1>' . implode(" ,  \n ", $phone_arr) . '<br>';
-
-    function Correct_user_phone_number($arr)
-    {
-        return array_map(function ($n) {
-            $n = preg_replace('/[\s+\-\(\)]/', '', $n);
-
-            if (strlen($n) >= 13 || strlen($n) < 9) {
-                return "Invalid phone number: $n \n";
-            } else if (strlen($n) == 9) {
-                return 'Updated phone number: 998' . $n . "\n";
-            } else {
-                return "Correct phone number: $n \n";
-            }
-
-
-        }, $arr);
-
-
-    }
-
-    $result = Correct_user_phone_number($phone_arr);
-
-    echo implode(" ,  \n ", $result);
-
 } catch (AmoCRMApiException $e) {
-    echo 'Error: ' . $e->getMessage() . PHP_EOL;
+    echo "Error fetching contacts: " . $e->getMessage();
 }
 
-echo '<h1> get_contact.php </h1>';
-//
-//$userId = 330112233;
-//try {
-//    $user =  $apiClient->contacts()->getOne($userId);
-//
-//    $user_custom_field = $user->getCustomFieldsValues();
-//    $phoneField = $user_custom_field->getBy('fieldCode', 'PHONE');
-//
-//    echo $phoneField->getValues();
-//    echo "ID: " . $user->getId() . "\n";
-//    echo "Name: " . $user->getName() . "\n";
-//    echo "Phone number: " . $user->getCustomFieldsValues();
-//
-////        echo "Email: " . $user->getEmail() . "\n";
-//} catch (AmoCRMApiException $e) {
-//    echo 'Error: ' . $e->getMessage();
-//}
-//
+function correctPhoneNumber($phoneNumber)
+{
+    $phoneNumber = preg_replace('/[^0-9]/', '',  $phoneNumber);
 
+    if (strlen($phoneNumber) >= 13 || strlen($phoneNumber) < 9) {
+        return "неправильный номер телефона: $phoneNumber ";
+    } elseif (strlen($phoneNumber) == 9) {
+//        обновлен номер телефона:
+        return " 998{$phoneNumber}";
+    } else {
+        return $phoneNumber;
+    }
+}
+
+echo "<h1>Main.php</h1>";
+echo "test";
