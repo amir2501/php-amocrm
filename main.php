@@ -75,7 +75,7 @@ function correctPhoneNumber($phoneNumber)
         return "неправильный номер телефона: $phoneNumber ";
     } elseif (strlen($phoneNumber) == 9) {
 //        обновлен номер телефона:
-        return " 998{$phoneNumber}";
+        return "обновлен номер c $phoneNumber телефона: 998{$phoneNumber}";
     } else {
         return $phoneNumber;
     }
