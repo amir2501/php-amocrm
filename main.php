@@ -63,6 +63,9 @@ try {
             echo "No phone field found for contact ID {$contactId}.<br>";
         }
     }
+
+    // Read the raw POST data from the request
+   echo "main";
 } catch (AmoCRMApiException $e) {
     echo "Error fetching contacts: " . $e->getMessage();
 }

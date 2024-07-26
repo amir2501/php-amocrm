@@ -10,7 +10,7 @@ use AmoCRM\Models\ContactModel;
 
 $clientId = '676904c5-eee1-4fb6-9369-d3574c775247';
 $clientSecret = 'LldAD4LMFhGNcHZPdPqcKbyOFJNXOITpmK3p0Gx3GB8DAPfBi3z8dWLQzk7qz23e';
-$redirectUri = 'https://b2c7-90-156-160-11.ngrok-free.app/';
+$redirectUri = 'https://e7dd-213-230-102-28.ngrok-free.app/';
 $apiClient = new AmoCRMApiClient($clientId, $clientSecret, $redirectUri);
 
 $accessTokenArray = [
