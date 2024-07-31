@@ -134,7 +134,6 @@ if (isset($data['contacts']['update'])) {
                         );
                     }
 
-                    $apiClient->contacts()->updateOne($contactDetails);
 
                     $notesService = $apiClient->notes(NoteType::CONTACT);
                     $notes = $notesService->get($contactDetails);
@@ -157,6 +156,7 @@ if (isset($data['contacts']['update'])) {
 
                         $notesService->addOne($note);
                     }
+                    $apiClient->contacts()->updateOne($contactDetails);
 
                 } catch (AmoCRMApiException $e) {
                     file_put_contents('log.log', 'Error occurred: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);

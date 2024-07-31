@@ -1,1 +1,0 @@
-Error occurred: cURL error 28: Operation timed out after 901221 milliseconds with 0 bytes received (see https://curl.haxx.se/libcurl/c/libcurl-errors.html) for https://icpro12.amocrm.ru/api/v4/contacts/31661531
