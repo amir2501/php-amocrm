@@ -260,7 +260,6 @@ function manageWrongPhoneNumberTag($contactId, $contactDetails, $apiClient, $isW
 
 
 
-
         $tagExists = false;
         foreach ($contactTags as $tag) {
             if ($tag->getName() === 'Wrong Phone number') {
