@@ -61,133 +61,12 @@ flush();
 if ($data && isset($data['contacts']['update'])) {
     foreach ($data['contacts']['update'] as $contact) {
         if (isset($contact['id'])) {
+
             $contactId = $contact['id'];
 
-            $phoneNumbers = [];
-
-            $contact = $apiClient->contacts()->getOne($contactId);
-            $customFields = $contact->getCustomFieldsValues();
+            handle_post($apiClient, $contactId);
 
 
-            if ($customFields) {
-                $phoneField = $customFields->getBy('fieldCode', 'PHONE');
-                if ($phoneField) {
-
-                    $is_wrong = true;
-
-
-                    foreach ($phoneField->getValues() as $value) {
-                        $phoneNumbers[] = correctPhoneNumber($value->getValue());
-
-
-                        if ($is_wrong) {
-                            $current_phone_number = correctPhoneNumber($value->getValue());
-
-                            strlen($current_phone_number) == 12 ? $is_wrong = false : $is_wrong = true;
-                        }
-
-
-                    }
-
-
-                    file_put_contents('log.log', 'Phone number array' . json_encode($phoneNumbers) . PHP_EOL, FILE_APPEND);
-
-
-                    try {
-                        // Fetch the contact details
-
-
-                        // Find the PHONE field or create it if it doesn't exist
-                        $phoneField->setFieldCode('PHONE');
-
-                        // Create a new collection of phone values
-                        $phoneValues = new MultiselectCustomFieldValueCollection();
-
-                        // Add each phone number to the collection
-                        foreach ($phoneNumbers as $phoneNumber) {
-                            $phoneValues->add(
-                                (new MultiselectCustomFieldValueModel())->setValue($phoneNumber)
-                            );
-                        }
-
-
-                        $contactTags = $contact->getTags() ?: new TagsCollection();
-
-
-                        try {
-                            $tagExists = false;
-                            foreach ($contactTags as $tag) {
-                                if ($tag->getName() === 'Wrong Phone number') {
-                                    $tagExists = true;
-                                    break;
-                                }
-                            }
-
-                            if (!$is_wrong) {
-
-                                if ($tagExists) {
-                                    foreach ($contactTags as $key => $tag) {
-                                        if ($tag->getName() === 'Wrong Phone number') {
-                                            $contactTags->offsetUnset($key);
-                                            file_put_contents('log.log', 'Tag "Wrong Phone number" removed from contact' . PHP_EOL, FILE_APPEND);
-                                            break;
-                                        }
-                                    }
-                                    $contact->setTags($contactTags);
-
-                                    try {
-                                        $apiClient->contacts()->updateOne($contact);
-                                    } catch (AmoCRMApiException $e) {
-                                        file_put_contents('error.log', 'Error occurred: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
-                                    }
-                                }
-                            } else {
-                                // Add the tag if it doesn't exist
-                                if (!$tagExists) {
-                                    $tag = new TagModel();
-                                    $tag->setName('Wrong Phone number');
-                                    $contactTags->add($tag);
-                                    $contact->setTags($contactTags);
-
-                                    try {
-                                        $apiClient->contacts()->updateOne($contact);
-                                        file_put_contents('log.log', 'Tag "Wrong Phone number" added to contact' . PHP_EOL, FILE_APPEND);
-                                    } catch (AmoCRMApiException $e) {
-                                        file_put_contents('error.log', 'Error occurred: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
-                                    }
-                                }
-                            }
-                        } catch (AmoCRMApiException $e) {
-                            file_put_contents('error.log', 'Error occurred: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
-                        }
-
-                        // Set the new phone values to the phone field
-                        $phoneField->setValues($phoneValues);
-
-                        // Add or update the phone field in the custom fields collection
-                        if (!$customFields->getBy('fieldCode', 'PHONE')) {
-                            $customFields->add($phoneField);
-                        }
-
-                        // Set the custom fields back to the contact details
-                        $contact->setCustomFieldsValues($customFields);
-
-                        // Update the contact
-                        $apiClient->contacts()->updateOne($contact);
-
-                        file_put_contents('log.log', "Phone numbers updated successfully for contact ID: $contactId\n", FILE_APPEND);
-
-                    } catch (AmoCRMApiException $e) {
-                        file_put_contents('log.log', 'Error occurred: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
-                        echo 'Error: ' . $e->getMessage() . PHP_EOL;
-                    }
-
-                }
-            }
-
-
-            file_put_contents('log.log', "Id: " . $contactId . "\n", FILE_APPEND);
-            file_put_contents('log.log', "custom fields: " . $customFields . "\n", FILE_APPEND);
         } else {
             file_put_contents('error.log', "Missing id in contact data: " . print_r($contact, true) . "\n", FILE_APPEND);
         }
@@ -201,133 +80,10 @@ if (isset($data['contacts']['add'])) {
     foreach ($data['contacts']['add'] as $contact) {
 
         if (isset($contact['id'])) {
+
             $contactId = $contact['id'];
 
-            $phoneNumbers = [];
-
-            $contact = $apiClient->contacts()->getOne($contactId);
-            $customFields = $contact->getCustomFieldsValues();
-
-
-            if ($customFields) {
-                $phoneField = $customFields->getBy('fieldCode', 'PHONE');
-                if ($phoneField) {
-
-                    $is_wrong = true;
-
-
-                    foreach ($phoneField->getValues() as $value) {
-                        $phoneNumbers[] = correctPhoneNumber($value->getValue());
-
-
-                        if ($is_wrong) {
-                            $current_phone_number = correctPhoneNumber($value->getValue());
-
-                            strlen($current_phone_number) == 12 ? $is_wrong = false : $is_wrong = true;
-                        }
-
-
-                    }
-
-
-                    file_put_contents('log.log', 'Phone number array' . json_encode($phoneNumbers) . PHP_EOL, FILE_APPEND);
-
-
-                    try {
-                        // Fetch the contact details
-
-
-                        // Find the PHONE field or create it if it doesn't exist
-                        $phoneField->setFieldCode('PHONE');
-
-                        // Create a new collection of phone values
-                        $phoneValues = new MultiselectCustomFieldValueCollection();
-
-                        // Add each phone number to the collection
-                        foreach ($phoneNumbers as $phoneNumber) {
-                            $phoneValues->add(
-                                (new MultiselectCustomFieldValueModel())->setValue($phoneNumber)
-                            );
-                        }
-
-
-                        $contactTags = $contact->getTags() ?: new TagsCollection();
-
-
-                        try {
-                            $tagExists = false;
-                            foreach ($contactTags as $tag) {
-                                if ($tag->getName() === 'Wrong Phone number') {
-                                    $tagExists = true;
-                                    break;
-                                }
-                            }
-
-                            if (!$is_wrong) {
-
-                                if ($tagExists) {
-                                    foreach ($contactTags as $key => $tag) {
-                                        if ($tag->getName() === 'Wrong Phone number') {
-                                            $contactTags->offsetUnset($key);
-                                            file_put_contents('log.log', 'Tag "Wrong Phone number" removed from contact' . PHP_EOL, FILE_APPEND);
-                                            break;
-                                        }
-                                    }
-                                    $contact->setTags($contactTags);
-
-                                    try {
-                                        $apiClient->contacts()->updateOne($contact);
-                                    } catch (AmoCRMApiException $e) {
-                                        file_put_contents('error.log', 'Error occurred: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
-                                    }
-                                }
-                            } else {
-                                // Add the tag if it doesn't exist
-                                if (!$tagExists) {
-                                    $tag = new TagModel();
-                                    $tag->setName('Wrong Phone number');
-                                    $contactTags->add($tag);
-                                    $contact->setTags($contactTags);
-
-                                    try {
-                                        $apiClient->contacts()->updateOne($contact);
-                                        file_put_contents('log.log', 'Tag "Wrong Phone number" added to contact' . PHP_EOL, FILE_APPEND);
-                                    } catch (AmoCRMApiException $e) {
-                                        file_put_contents('error.log', 'Error occurred: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
-                                    }
-                                }
-                            }
-                        } catch (AmoCRMApiException $e) {
-                            file_put_contents('error.log', 'Error occurred: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
-                        }
-
-                        // Set the new phone values to the phone field
-                        $phoneField->setValues($phoneValues);
-
-                        // Add or update the phone field in the custom fields collection
-                        if (!$customFields->getBy('fieldCode', 'PHONE')) {
-                            $customFields->add($phoneField);
-                        }
-
-                        // Set the custom fields back to the contact details
-                        $contact->setCustomFieldsValues($customFields);
-
-                        // Update the contact
-                        $apiClient->contacts()->updateOne($contact);
-
-                        file_put_contents('log.log', "Phone numbers updated successfully for contact ID: $contactId\n", FILE_APPEND);
-
-                    } catch (AmoCRMApiException $e) {
-                        file_put_contents('log.log', 'Error occurred: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
-                        echo 'Error: ' . $e->getMessage() . PHP_EOL;
-                    }
-
-                }
-            }
-
-
-            file_put_contents('log.log', "Id: " . $contactId . "\n", FILE_APPEND);
-            file_put_contents('log.log', "custom fields: " . $customFields . "\n", FILE_APPEND);
+            handle_post($apiClient, $contactId);
         } else {
             file_put_contents('error.log', "Missing id in contact data: " . print_r($contact, true) . "\n", FILE_APPEND);
         }
@@ -335,6 +91,125 @@ if (isset($data['contacts']['add'])) {
     }
 }
 
+
+function handle_post($apiClient, $contactId)
+{
+    $phoneNumbers = [];
+
+    $contact = $apiClient->contacts()->getOne($contactId);
+    $customFields = $contact->getCustomFieldsValues();
+
+
+    if ($customFields) {
+        $phoneField = $customFields->getBy('fieldCode', 'PHONE');
+        if ($phoneField) {
+
+            $is_wrong = true;
+
+
+            foreach ($phoneField->getValues() as $value) {
+                $phoneNumbers[] = correctPhoneNumber($value->getValue());
+
+
+                if ($is_wrong) {
+                    $current_phone_number = correctPhoneNumber($value->getValue());
+
+                    strlen($current_phone_number) == 12 ? $is_wrong = false : $is_wrong = true;
+                }
+
+
+            }
+
+
+            file_put_contents('log.log', 'Phone number array' . json_encode($phoneNumbers) . PHP_EOL, FILE_APPEND);
+
+
+            try {
+                // Fetch the contact details
+
+
+                // Find the PHONE field or create it if it doesn't exist
+                $phoneField->setFieldCode('PHONE');
+
+                // Create a new collection of phone values
+                $phoneValues = new MultiselectCustomFieldValueCollection();
+
+                // Add each phone number to the collection
+                foreach ($phoneNumbers as $phoneNumber) {
+                    $phoneValues->add(
+                        (new MultiselectCustomFieldValueModel())->setValue($phoneNumber)
+                    );
+                }
+
+
+                $contactTags = $contact->getTags() ?: new TagsCollection();
+
+
+                try {
+                    $tagExists = false;
+                    foreach ($contactTags as $tag) {
+                        if ($tag->getName() === 'Wrong Phone number') {
+                            $tagExists = true;
+                            break;
+                        }
+                    }
+
+                    if (!$is_wrong) {
+
+                        if ($tagExists) {
+                            foreach ($contactTags as $key => $tag) {
+                                if ($tag->getName() === 'Wrong Phone number') {
+                                    $contactTags->offsetUnset($key);
+                                    file_put_contents('log.log', 'Tag "Wrong Phone number" removed from contact' . PHP_EOL, FILE_APPEND);
+                                    break;
+                                }
+                            }
+                            $contact->setTags($contactTags);
+                        }
+                    } else {
+                        // Add the tag if it doesn't exist
+                        if (!$tagExists) {
+                            $tag = new TagModel();
+                            $tag->setName('Wrong Phone number');
+                            $contactTags->add($tag);
+                            $contact->setTags($contactTags);
+
+
+                        }
+                    }
+                } catch (AmoCRMApiException $e) {
+                    file_put_contents('error.log', 'Error occurred: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
+                }
+
+                // Set the new phone values to the phone field
+                $phoneField->setValues($phoneValues);
+
+                // Add or update the phone field in the custom fields collection
+                if (!$customFields->getBy('fieldCode', 'PHONE')) {
+                    $customFields->add($phoneField);
+                }
+
+                // Set the custom fields back to the contact details
+                $contact->setCustomFieldsValues($customFields);
+
+                // Update the contact
+                $apiClient->contacts()->updateOne($contact);
+
+                file_put_contents('log.log', "Phone numbers updated successfully for contact ID: $contactId\n", FILE_APPEND);
+
+            } catch (AmoCRMApiException $e) {
+                file_put_contents('log.log', 'Error occurred: ' . $e->getMessage() . PHP_EOL, FILE_APPEND);
+                echo 'Error: ' . $e->getMessage() . PHP_EOL;
+            }
+
+        }
+    }
+
+
+    file_put_contents('log.log', "Id: " . $contactId . "\n", FILE_APPEND);
+    file_put_contents('log.log', "custom fields: " . $customFields . "\n", FILE_APPEND);
+
+}
 
 function correctPhoneNumber($phoneNumber)
 {
