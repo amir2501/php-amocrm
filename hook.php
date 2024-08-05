@@ -95,6 +95,7 @@ if (isset($data['contacts']['add'])) {
 function handle_post($apiClient, $contactId)
 {
     $phoneNumbers = [];
+    $is_true = [];
 
     $contact = $apiClient->contacts()->getOne($contactId);
     $customFields = $contact->getCustomFieldsValues();
@@ -111,17 +112,23 @@ function handle_post($apiClient, $contactId)
                 $phoneNumbers[] = correctPhoneNumber($value->getValue());
 
 
-                if ($is_wrong) {
+
                     $current_phone_number = correctPhoneNumber($value->getValue());
 
-                    strlen($current_phone_number) == 12 ? $is_wrong = false : $is_wrong = true;
-                }
+                $current_phone_number = preg_replace('/[^0-9]/', '', $current_phone_number);
 
+
+                $is_true[] = strlen($current_phone_number) == 12 ? true : false;
+
+
+                file_put_contents('log.log', 'Phone number ' . strlen($current_phone_number) . PHP_EOL, FILE_APPEND);
 
             }
 
 
             file_put_contents('log.log', 'Phone number array' . json_encode($phoneNumbers) . PHP_EOL, FILE_APPEND);
+            var_dump($is_true); // Check the type and value of $is_true
+            file_put_contents('log.log', 'Bool array: ' . json_encode($is_true) . PHP_EOL, FILE_APPEND);
 
 
             try {
@@ -154,7 +161,7 @@ function handle_post($apiClient, $contactId)
                         }
                     }
 
-                    if (!$is_wrong) {
+                    if (!in_array(false, $is_true, true)) {
 
                         if ($tagExists) {
                             foreach ($contactTags as $key => $tag) {
